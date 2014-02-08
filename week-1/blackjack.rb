@@ -263,7 +263,7 @@ require 'optparse'
 
 options = {:name => 'Player', :play => false, :simulation => false}
 
-OptionParser.new do |opts|
+parser = OptionParser.new do |opts|
   opts.banner = "Usage: blackjack.rb [options]"
   opts.on("-h","--help","help") do
     puts opts
@@ -277,7 +277,11 @@ OptionParser.new do |opts|
   opts.on("-s", "--simulation", "Run Blackjack simulation") do
     options[:simulation] = true
   end
-end.parse!
+end
+
+puts parser if ARGV.empty?
+
+parser.parse!
 
 game_play options[:name] if options[:play]
 
