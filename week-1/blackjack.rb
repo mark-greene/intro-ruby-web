@@ -60,9 +60,7 @@ CARDS = []
     hand.each do | card |
       rank, suit = card
       value += value_of_card card
-      if rank == 'Ace'
-        ace_count += 1
-      end
+      ace_count += 1 if rank == 'Ace'
     end
 
     while value > 21 && ace_count > 0
@@ -118,9 +116,7 @@ CARDS = []
 
   def load_shoe number_of_decks
     shoe = []
-    for i in 1..number_of_decks
-      shoe += CARDS
-    end
+    (1..number_of_decks).each { shoe += CARDS }
     shoe
   end
 
@@ -186,7 +182,7 @@ def game_simulation number_of_decks = 6, percent_reserved = 25.0
   return dealer_wins, player_wins, pushes
 end
 
-def player_wants_a_hit name, hand, upcard
+def player_wants_a_hit? name, hand, upcard
   rank, suit = upcard
   puts "\n#{name} has #{value_of_hand(hand)}"
   print_cards hand
@@ -225,7 +221,7 @@ def game_play name
     upcard_rank, upcard_suit = dealer[1]
     puts "\nDealer upcard is #{upcard_rank} of #{upcard_suit}"
 
-    while player_wants_a_hit(name, player, dealer[1])
+    while player_wants_a_hit?(name, player, dealer[1])
       card = draw_card cards
       player += [card]
     end
@@ -269,19 +265,15 @@ options = {:name => 'Player', :play => false, :simulation => false}
 
 OptionParser.new do |opts|
   opts.banner = "Usage: blackjack.rb [options]"
-
   opts.on("-h","--help","help") do
     puts opts
   end
-
   opts.on("-n", "--name Player", "Name") do |name|
     options[:name] = name
   end
-
   opts.on("-p", "--play", "Play Blackjack") do
     options[:play] = true
   end
-
   opts.on("-s", "--simulation", "Run Blackjack simulation") do
     options[:simulation] = true
   end
