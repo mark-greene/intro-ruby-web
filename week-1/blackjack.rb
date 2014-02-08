@@ -186,9 +186,9 @@ def game_simulation number_of_decks = 6, percent_reserved = 25.0
   return dealer_wins, player_wins, pushes
 end
 
-def player_wants_a_hit hand, upcard
+def player_wants_a_hit name, hand, upcard
   rank, suit = upcard
-  puts "\nYou have #{value_of_hand(hand)}"
+  puts "\n#{name} has #{value_of_hand(hand)}"
   print_cards hand
 
   if results_of_hand(hand)  == :blackjack
@@ -202,7 +202,7 @@ def player_wants_a_hit hand, upcard
   false
 end
 
-def game_play
+def game_play name
   cards = load_shoe 2
 
   number_of_reserve_cards = (cards.count.to_f * 25 / 100).to_i
@@ -225,7 +225,7 @@ def game_play
     upcard_rank, upcard_suit = dealer[1]
     puts "\nDealer upcard is #{upcard_rank} of #{upcard_suit}"
 
-    while player_wants_a_hit(player, dealer[1])
+    while player_wants_a_hit(name, player, dealer[1])
       card = draw_card cards
       player += [card]
     end
@@ -246,20 +246,50 @@ def game_play
     if  (dealer_result == :blackjack && player_result != :blackjack) || player_result == :bust
       puts "\nDealer wins with #{dealer_result}"
     elsif player_result == :blackjack || dealer_result == :bust
-      puts "\nPlayer wins with #{player_result}"
+      puts "\n#{name} wins with #{player_result}"
     elsif dealer_result > player_result
       puts "\nDealer wins with #{dealer_result}"
     elsif player_result > dealer_result
-      puts "\nPlayer wins with #{player_result}"
+      puts "\n#{name} wins with #{player_result}"
     else
       puts "\nPush with #{dealer_result}"
     end
 
-    puts "\nPlay again (Y/N)"
+    puts "\nPlay again #{name} (Y/N)"
     if gets.chomp.downcase == 'n'
       break
     end
   end
 end
 
-game_play
+#main
+require 'optparse'
+
+options = {:name => 'Player', :play => false, :simulation => false}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: blackjack.rb [options]"
+
+  opts.on("-h","--help","help") do
+    puts opts
+  end
+
+  opts.on("-n", "--name Player", "Name") do |name|
+    options[:name] = name
+  end
+
+  opts.on("-p", "--play", "Play Blackjack") do
+    options[:play] = true
+  end
+
+  opts.on("-s", "--simulation", "Run Blackjack simulation") do
+    options[:simulation] = true
+  end
+end.parse!
+
+game_play options[:name] if options[:play]
+
+if options[:simulation]
+  losses, wins, pushes = game_simulation
+  puts "#{options[:name]} wins: #{wins}, pushes: #{pushes}\nDealer wins: #{losses}"
+end
