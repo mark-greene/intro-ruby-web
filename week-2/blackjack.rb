@@ -162,7 +162,7 @@ class Blackjack
     @losses = 0
   end
 
-  def play
+  def simulation
     @cards = Deck.new @number_of_decks, @percent_reserved
 
     @cards.shuffle
@@ -196,6 +196,7 @@ class Blackjack
       end
       @total += 1
     end
+    self
   end
 
   def player_strategy hand, dealer
@@ -232,3 +233,34 @@ class Blackjack
   end
 
 end
+
+#main
+require 'optparse'
+
+options = {:name => 'Player', :play => false, :simulation => false}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: blackjack.rb [options]"
+  opts.on("-h","--help","help") do
+    puts opts
+  end
+  opts.on("-n", "--name Player", "Name") do |name|
+    options[:name] = name
+  end
+  opts.on("-p", "--play", "Play Blackjack") do
+    options[:play] = true
+  end
+  opts.on("-s", "--simulation", "Run Blackjack simulation") do
+    options[:simulation] = true
+  end
+end
+
+puts parser if ARGV.empty?
+
+parser.parse!
+
+if options[:simulation]
+  game = Blackjack.new.simulation
+  puts "#{options[:name]} wins: #{game.wins}, pushes: #{game.pushes}\nDealer wins: #{game.losses}"
+end
+

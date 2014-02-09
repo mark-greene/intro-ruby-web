@@ -240,7 +240,7 @@ NUMBER_OF_RUNS = 10000
   context "game simulation" do
     it "should run successfully" do
 
-      (1..NUMBER_OF_RUNS).each { @game.play }
+      (1..NUMBER_OF_RUNS).each { @game.simulation }
 
       percent = @game.wins / @game.total.to_f * 100
       puts "\n    In #{@game.total} games, Player wins #{"%0.2f" % percent}%"
