@@ -240,11 +240,21 @@ NUMBER_OF_RUNS = 10000
   context "game simulation" do
     it "should run successfully" do
 
-      (1..NUMBER_OF_RUNS).each { @game.simulation }
+      wins = 0
+      pushes = 0
+      total = 0
 
-      percent = @game.wins / @game.total.to_f * 100
-      puts "\n    In #{@game.total} games, Player wins #{"%0.2f" % percent}%"
-      percent = (@game.wins + @game.pushes) / @game.total.to_f * 100
+      (1..NUMBER_OF_RUNS).each do
+        game = Blackjack.new
+        game.simulation
+        wins += game.wins
+        pushes += game.pushes
+        total += game.total
+      end
+
+      percent = wins / total.to_f * 100
+      puts "\n    In #{total} games, Player wins #{"%0.2f" % percent}%"
+      percent = (wins + pushes) / total.to_f * 100
       puts "       Player doesn't loose #{"%0.2f" %percent}%"
     end
   end

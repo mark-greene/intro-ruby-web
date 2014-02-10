@@ -83,9 +83,9 @@ class Hand
     case self.value
     when 21
       self.count == 2 && :blackjack || 21
-    when 12..20
+    when 3..20
       value
-    when 0..11
+    when 0..2
       raise "error, #{self.value} is an illegal hand"
     else
       :bust
@@ -156,24 +156,49 @@ class Blackjack
   def initialize number_of_decks = 6, percent_reserved = 25.0
     @number_of_decks = number_of_decks
     @percent_reserved = percent_reserved
+    @cards = Deck.new @number_of_decks, @percent_reserved
+
     @total = 0
     @wins = 0
     @pushes = 0
     @losses = 0
   end
 
-  def simulation
-    @cards = Deck.new @number_of_decks, @percent_reserved
-
+  def get_cards_ready_to_deal
     @cards.shuffle
     @cards.cut
+  end
+
+  def deal_initial_hands
+    player = Hand.new
+    dealer = Hand.new
+    player.add_card(@cards.draw)
+    dealer.add_card(@cards.draw)
+    player.add_card(@cards.draw)
+    dealer.add_card(@cards.draw)
+    return [player, dealer]
+  end
+
+  def check_hand_results player, dealer
+    if  (dealer.result == :blackjack && player.result != :blackjack) || player.result == :bust
+      @losses += 1
+    elsif player.result == :blackjack || dealer.result == :bust
+      @wins += 1
+    elsif dealer.result > player.result
+      @losses += 1
+    elsif player.result > dealer.result
+      @wins += 1
+    else
+      @pushes += 1
+    end
+    @total += 1
+  end
+
+  def simulation
+    get_cards_ready_to_deal
 
     while !@cards.in_reserve? do
-
-      player = Hand.new @cards.draw
-      dealer = Hand.new @cards.draw
-      player.add_card(@cards.draw)
-      dealer.add_card(@cards.draw)
+      player, dealer = deal_initial_hands
 
       while player_strategy(player, dealer) == :hit do
         player.add_card(@cards.draw)
@@ -183,20 +208,50 @@ class Blackjack
         dealer.add_card(@cards.draw)
       end
 
-      if  (dealer.result == :blackjack && player.result != :blackjack) || player.result == :bust
-        @losses += 1
-      elsif player.result == :blackjack || dealer.result == :bust
-        @wins += 1
-      elsif dealer.result > player.result
-        @losses += 1
-      elsif player.result > dealer.result
-        @wins += 1
-      else
-        @pushes += 1
-      end
-      @total += 1
+      check_hand_results player, dealer
     end
-    self
+
+  end
+
+  def play
+    name = 'Player'
+    get_cards_ready_to_deal
+
+    while !@cards.in_reserve? do
+      player, dealer = deal_initial_hands
+
+      while player_wants_a_card?(player, dealer) do
+        player.add_card(@cards.draw)
+      end
+
+      while dealer_strategy(dealer) == :hit do
+        dealer.add_card(@cards.draw)
+      end
+
+      check_hand_results player, dealer
+
+      puts "\nPlay again #{name} (Y/N)"
+      if gets.chomp.downcase == 'n'
+        break
+      end
+    end
+
+  end
+
+  def player_wants_a_card? player, dealer
+    name = 'Player'
+    puts "\n#{name} has #{player.value}"
+#    player.print
+
+    if player.result == :blackjack
+      puts "    *Blackjack*"
+    elsif player.result == :bust
+      puts "    *Busted!"
+    else
+      puts "\nDo you want another card (Y/N)?"
+      return gets.chomp.downcase == 'y'
+    end
+    false
   end
 
   def player_strategy hand, dealer
@@ -260,10 +315,16 @@ end
 
 puts parser if ARGV.empty?
 
-parser.parse(ARGV)
+parser.parse!
 
 if options[:simulation]
-  game = Blackjack.new.simulation
+  game = Blackjack.new
+  game.simulation
   puts "#{options[:name]} wins: #{game.wins}, pushes: #{game.pushes}\nDealer wins: #{game.losses}"
 end
 
+if options[:play]
+  game = Blackjack.new
+  game.play
+  puts "#{options[:name]} wins: #{game.wins}, pushes: #{game.pushes}\nDealer wins: #{game.losses}"
+end
