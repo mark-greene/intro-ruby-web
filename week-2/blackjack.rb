@@ -241,7 +241,8 @@ options = {:name => 'Player', :play => false, :simulation => false}
 
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: blackjack.rb [options]"
-  opts.on("-h","--help","help") do
+  opts.separator ""
+  opts.on("-h","--help","Displays usage options") do
     puts opts
   end
   opts.on("-n", "--name Player", "Name") do |name|
@@ -253,11 +254,13 @@ parser = OptionParser.new do |opts|
   opts.on("-s", "--simulation", "Run Blackjack simulation") do
     options[:simulation] = true
   end
+  opts.on("-f", "--format", "rspec passthrough/hack") do
+  end
 end
 
 puts parser if ARGV.empty?
 
-parser.parse!
+parser.parse(ARGV)
 
 if options[:simulation]
   game = Blackjack.new.simulation
