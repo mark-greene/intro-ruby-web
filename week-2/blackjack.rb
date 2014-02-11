@@ -135,6 +135,17 @@ class Hand
     false
   end
 
+  def reset
+    @hand =  []
+    @value = nil
+  end
+
+  def hand_builder *ranks
+    self.reset
+    ranks.each { |rank| self.add_card( Card.new(rank)) }
+    self
+  end
+
   def hand_value
     ace_count = 0
     value = 0
@@ -156,6 +167,41 @@ class Hand
   private :hand_value
 end
 
+class Dealer < Hand
+
+  def strategy
+    self.value >= 17 && :stand || :hit
+  end
+
+end
+
+class Player < Hand
+
+  def strategy dealer
+    strategy = :stand
+
+    if self.count == 2 && self.contains?(:Ace)
+      if self.value >= 19
+        strategy =  :stand
+      elsif self.value == 18 && [2, 7, 8].include?(dealer.card_value(1))
+        strategy =  :stand
+      else
+        strategy = :hit
+      end
+    else
+      if self.value <= 11 || (self.value == 12 && dealer.card_value(1).between?(2, 3))
+        strategy =  :hit
+      elsif self.value >= 17 || dealer.card_value(1).between?(2, 6)
+        strategy =  :stand
+      elsif self.value < (dealer.card_value(1) + 10)
+        strategy =  :hit
+      end
+    end
+    strategy
+  end
+
+end
+
 class Blackjack
   attr_reader   :total, :wins, :pushes, :losses
 
@@ -170,14 +216,32 @@ class Blackjack
     @losses = 0
   end
 
+  def simulation
+    get_cards_ready_to_deal
+
+    while !@cards.in_reserve? do
+      player, dealer = deal_initial_hands
+
+      while player.strategy(dealer) == :hit do
+        player.add_card(@cards.draw)
+      end
+
+      while dealer.strategy == :hit do
+        dealer.add_card(@cards.draw)
+      end
+
+      check_hand_results player, dealer
+    end
+  end
+
   def get_cards_ready_to_deal
     @cards.shuffle
     @cards.cut
   end
 
   def deal_initial_hands
-    player = Hand.new
-    dealer = Hand.new
+    player = Player.new
+    dealer = Dealer.new
     player.add_card(@cards.draw)
     dealer.add_card(@cards.draw)
     player.add_card(@cards.draw)
@@ -209,25 +273,6 @@ class Blackjack
     results
   end
 
-  def simulation
-    get_cards_ready_to_deal
-
-    while !@cards.in_reserve? do
-      player, dealer = deal_initial_hands
-
-      while player_strategy(player, dealer) == :hit do
-        player.add_card(@cards.draw)
-      end
-
-      while dealer_strategy(dealer) == :hit do
-        dealer.add_card(@cards.draw)
-      end
-
-      check_hand_results player, dealer
-    end
-
-  end
-
   def play name = 'Player'
     get_cards_ready_to_deal
 
@@ -241,7 +286,7 @@ class Blackjack
       end
 
       if player.result != :bust
-        while dealer_strategy(dealer) == :hit do
+        while dealer.strategy == :hit do
           dealer.add_card(@cards.draw)
         end
       end
@@ -256,7 +301,6 @@ class Blackjack
         break
       end
     end
-
   end
 
   def player_wants_a_card? player, dealer, name = 'Player'
@@ -272,39 +316,6 @@ class Blackjack
       return gets.chomp.downcase == 'y'
     end
     false
-  end
-
-  def player_strategy hand, dealer
-    strategy = :stand
-
-    if hand.count == 2 && hand.contains?(:Ace)
-      if hand.value >= 19
-        strategy =  :stand
-      elsif hand.value == 18 && [2, 7, 8].include?(dealer.card_value(1))
-        strategy =  :stand
-      else
-        strategy = :hit
-      end
-    else
-      if hand.value <= 11 || (hand.value == 12 && dealer.card_value(1).between?(2, 3))
-        strategy =  :hit
-      elsif hand.value >= 17 || dealer.card_value(1).between?(2, 6)
-        strategy =  :stand
-      elsif hand.value < (dealer.card_value(1) + 10)
-        strategy =  :hit
-      end
-    end
-    strategy
-  end
-
-  def dealer_strategy hand
-    hand.value >= 17 && :stand || :hit
-  end
-
-  def hand_builder *ranks
-    hand = Hand.new
-    ranks.each { |rank| hand.add_card( Card.new(rank)) }
-    hand
   end
 
 end
