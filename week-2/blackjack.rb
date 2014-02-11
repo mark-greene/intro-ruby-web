@@ -79,6 +79,12 @@ class Hand
     end
   end
 
+  def to_s
+    s = ''
+    @hand.each { |card| s += "  #{card}\n"}
+    s
+  end
+
   def result
     case self.value
     when 21
@@ -180,18 +186,27 @@ class Blackjack
   end
 
   def check_hand_results player, dealer
-    if  (dealer.result == :blackjack && player.result != :blackjack) || player.result == :bust
+    if  (dealer.result == :blackjack && player.result != :blackjack) \
+        || (dealer.result == :blackjack && player.result != 21) \
+        || player.result == :bust
+      results = "Dealer wins with #{dealer.result}"
       @losses += 1
-    elsif player.result == :blackjack || dealer.result == :bust
+    elsif player.result == :blackjack \
+        || dealer.result == :bust
+      results = "Player wins with #{player.result}"
       @wins += 1
     elsif dealer.result > player.result
+      results = "Dealer wins with #{dealer.result}"
       @losses += 1
     elsif player.result > dealer.result
+      results = "Player wins with #{player.result}"
       @wins += 1
     else
+      results = "Push"
       @pushes += 1
     end
     @total += 1
+    results
   end
 
   def simulation
@@ -213,24 +228,30 @@ class Blackjack
 
   end
 
-  def play
-    name = 'Player'
+  def play name = 'Player'
     get_cards_ready_to_deal
 
     while !@cards.in_reserve? do
       player, dealer = deal_initial_hands
 
-      while player_wants_a_card?(player, dealer) do
+      puts "\nDealer upcard is - #{dealer.card(1)} -"
+
+      while player_wants_a_card?(player, dealer, name) do
         player.add_card(@cards.draw)
       end
 
-      while dealer_strategy(dealer) == :hit do
-        dealer.add_card(@cards.draw)
+      if player.result != :bust
+        while dealer_strategy(dealer) == :hit do
+          dealer.add_card(@cards.draw)
+        end
       end
 
-      check_hand_results player, dealer
+      puts "\nDealer has #{dealer.value}"
+      puts "#{dealer}"
 
-      puts "\nPlay again #{name} (Y/N)"
+      puts "\n*** #{check_hand_results player, dealer}"
+
+      puts "\nPlay again #{name} (Y*/N)"
       if gets.chomp.downcase == 'n'
         break
       end
@@ -238,17 +259,16 @@ class Blackjack
 
   end
 
-  def player_wants_a_card? player, dealer
-    name = 'Player'
+  def player_wants_a_card? player, dealer, name = 'Player'
     puts "\n#{name} has #{player.value}"
-#    player.print
+    puts "#{player}"
 
     if player.result == :blackjack
       puts "    *Blackjack*"
     elsif player.result == :bust
       puts "    *Busted!"
     else
-      puts "\nDo you want another card (Y/N)?"
+      puts "\nDo you want another card (Y/N*)?"
       return gets.chomp.downcase == 'y'
     end
     false
@@ -321,10 +341,14 @@ if options[:simulation]
   game = Blackjack.new
   game.simulation
   puts "#{options[:name]} wins: #{game.wins}, pushes: #{game.pushes}\nDealer wins: #{game.losses}"
+  puts "\n    In #{game.total} games, Player wins #{"%0.2f" % ((game.wins / game.total.to_f) * 100)}%"
+  puts "       Player doesn't loose #{"%0.2f" %(((game.wins + game.pushes) / game.total.to_f) * 100)}%"
 end
 
 if options[:play]
   game = Blackjack.new
-  game.play
+  game.play options[:name]
   puts "#{options[:name]} wins: #{game.wins}, pushes: #{game.pushes}\nDealer wins: #{game.losses}"
+  puts "\n    In #{game.total} games, Player wins #{"%0.2f" % ((game.wins / game.total.to_f) * 100)}%"
+  puts "       Player doesn't loose #{"%0.2f" %(((game.wins + game.pushes) / game.total.to_f) * 100)}%"
 end

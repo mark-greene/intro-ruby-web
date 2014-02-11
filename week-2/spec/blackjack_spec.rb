@@ -103,9 +103,13 @@ describe "Hand" do
     expect(@hand.value).to eq (13)
   end
 
-  it "should get a hand's result" do
-    @hand.add_card Card.new(10, :Clubs)
+  it "should get an error" do
+    @hand.add_card Card.new(2, :Clubs)
     expect{@hand.result}.to raise_error
+  end
+
+  it "should get a hand's result" do
+    @hand.add_card Card.new(:Jack, :Clubs)
     @hand.add_card Card.new(:Ace, :Clubs)
     expect(@hand.result).to eq (:blackjack)
     @hand.add_card Card.new(10, :Clubs)
