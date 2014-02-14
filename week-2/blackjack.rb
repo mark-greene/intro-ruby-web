@@ -16,18 +16,21 @@ class Card
   end
 
   def == card
-    self.rank == card.rank && self.suit == card.suit
+    rank == card.rank && suit == card.suit
   end
 
   def to_s
-    "#{@rank} of #{@suit}"
+    "#{rank} of #{suit}"
   end
 
 end
 
 class Deck
+  protected
+  attr_reader :cards, :number_of_reserve_cards
+  public
   attr_reader :number_of_decks, :percent_reserved
-  attr_reader :in_reserve, :count
+  attr_reader :count
 
   def initialize number_of_decks = 1, percent_reserved = 20.0
     @number_of_decks = number_of_decks
@@ -39,58 +42,61 @@ class Deck
   end
 
   def print
-    puts "#{@cards.count}-card deck"
-    @cards.each do | card |
+    puts "#{count}-card deck"
+    self.cards.each do | card |
       puts "  #{card}"
     end
   end
 
   def shuffle
-    @cards.shuffle!
+    self.cards.shuffle!
   end
 
   def cut
-    @cards.rotate! @cards.count / 2
+    self.cards.rotate! count / 2
   end
 
   def draw
-    @cards.shift
+    self.cards.shift
   end
 
   def count
-    @cards.count
+    self.cards.count
   end
 
   def in_reserve?
-    @cards.count < @number_of_reserve_cards
+    self.cards.count < self.number_of_reserve_cards
   end
 end
 
 class Hand
-  attr_reader   :count, :value
+  protected
+  attr_accessor :cards
+  public
+  attr_accessor :value
 
-  def initialize hand = nil
-    if hand.nil?
-      @hand =  []
+  def initialize card = nil
+    if card.nil?
+      @cards =  []
       @value = nil
     else
-      @hand = [hand]
+      @cards = [card]
       @value = hand_value
     end
   end
 
   def to_s
     s = ''
-    @hand.each { |card| s += "  #{card}\n"}
+    self.cards.each { |card| s += "  #{card}\n"}
     s
   end
 
   def result
     case self.value
     when 21
-      self.count == 2 && :blackjack || 21
+      count == 2 && :blackjack || 21
     when 3..20
-      value
+      self.value
     when 0..2
       raise "error, #{self.value} is an illegal hand"
     else
@@ -99,16 +105,16 @@ class Hand
   end
 
   def add_card card
-    @hand += [card]
-    @value = hand_value
+    self.cards += [card]
+    self.value = hand_value
   end
 
   def count
-    @hand.count
+    self.cards.count
   end
 
   def card position
-    @hand[position]
+    self.cards[position]
   end
 
   def card_value position
@@ -127,7 +133,7 @@ class Hand
   end
 
   def contains? rank
-    @hand.each do | card |
+    self.cards.each do | card |
       if rank == card.rank
         return true
       end
@@ -136,32 +142,32 @@ class Hand
   end
 
   def reset
-    @hand =  []
-    @value = nil
+    self.cards =  []
+    self.value = nil
   end
 
   def hand_builder *ranks
-    self.reset
-    ranks.each { |rank| self.add_card( Card.new(rank)) }
+    reset
+    ranks.each { |rank| add_card( Card.new(rank)) }
     self
   end
 
   def hand_value
     ace_count = 0
-    value = 0
+    value_of_hand = 0
 
-    @hand.each_with_index do | card, index |
-      value += card_value index
+    self.cards.each_with_index do | card, index |
+      value_of_hand += card_value index
       if card.rank == :Ace
         ace_count += 1
       end
     end
 
-    while value > 21 && ace_count > 0
-      value -= 10
+    while value_of_hand > 21 && ace_count > 0
+      value_of_hand -= 10
       ace_count -= 1
     end
-    value
+    value_of_hand
   end
 
   private :hand_value
@@ -203,7 +209,11 @@ class Player < Hand
 end
 
 class Blackjack
-  attr_reader   :total, :wins, :pushes, :losses
+  protected
+  attr_reader :number_of_decks, :percent_reserved
+  attr_reader :cards
+  public
+  attr_accessor   :total, :wins, :pushes, :losses
 
   def initialize number_of_decks = 6, percent_reserved = 25.0
     @number_of_decks = number_of_decks
@@ -219,15 +229,15 @@ class Blackjack
   def simulation
     get_cards_ready_to_deal
 
-    while !@cards.in_reserve? do
+    while !self.cards.in_reserve? do
       player, dealer = deal_initial_hands
 
       while player.strategy(dealer) == :hit do
-        player.add_card(@cards.draw)
+        player.add_card(self.cards.draw)
       end
 
       while dealer.strategy == :hit do
-        dealer.add_card(@cards.draw)
+        dealer.add_card(self.cards.draw)
       end
 
       check_hand_results player, dealer
@@ -235,18 +245,18 @@ class Blackjack
   end
 
   def get_cards_ready_to_deal
-    @cards.shuffle
-    @cards.cut
+    self.cards.shuffle
+    self.cards.cut
   end
 
   def deal_initial_hands
     player = Player.new
     dealer = Dealer.new
-    player.add_card(@cards.draw)
-    dealer.add_card(@cards.draw)
-    player.add_card(@cards.draw)
-    dealer.add_card(@cards.draw)
-    return [player, dealer]
+    player.add_card(self.cards.draw)
+    dealer.add_card(self.cards.draw)
+    player.add_card(self.cards.draw)
+    dealer.add_card(self.cards.draw)
+    return player, dealer
   end
 
   def check_hand_results player, dealer
@@ -254,40 +264,40 @@ class Blackjack
         || (dealer.result == :blackjack && player.result != 21) \
         || player.result == :bust
       results = "Dealer wins with #{dealer.result}"
-      @losses += 1
+      self.losses += 1
     elsif player.result == :blackjack \
         || dealer.result == :bust
       results = "Player wins with #{player.result}"
-      @wins += 1
+      self.wins += 1
     elsif dealer.result > player.result
       results = "Dealer wins with #{dealer.result}"
-      @losses += 1
+      self.losses += 1
     elsif player.result > dealer.result
       results = "Player wins with #{player.result}"
-      @wins += 1
+      self.wins += 1
     else
       results = "Push"
-      @pushes += 1
+      self.pushes += 1
     end
-    @total += 1
+    self.total += 1
     results
   end
 
   def play name = 'Player'
     get_cards_ready_to_deal
 
-    while !@cards.in_reserve? do
+    while !self.cards.in_reserve? do
       player, dealer = deal_initial_hands
 
       puts "\nDealer upcard is - #{dealer.card(1)} -"
 
       while player_wants_a_card?(player, dealer, name) do
-        player.add_card(@cards.draw)
+        player.add_card(self.cards.draw)
       end
 
       if player.result != :bust
         while dealer.strategy == :hit do
-          dealer.add_card(@cards.draw)
+          dealer.add_card(self.cards.draw)
         end
       end
 
