@@ -132,14 +132,29 @@ describe "Dealer" do
     @dealer = Dealer.new
   end
 
+  it "should create a valid Dealer" do
+    expect(@dealer).to be_a_kind_of Dealer
+  end
+
+  it "should create a valid hand" do
+    cards =hand_builder(5, 5, 5)
+    expect(cards.count).to eq 3
+  end
+
+  it "should add cards to Dealer hand" do
+    cards =hand_builder(5, 5, 5)
+    dealer = Dealer.new cards
+    expect(dealer.count).to eq 3
+  end
+
   context "dealer strategy" do
     it "should :hit when hand is less than 17" do
-      @dealer.hand_builder 5, 5, 5
+      @dealer = Dealer.new hand_builder(5, 5, 5)
       expect(@dealer.strategy).to eq :hit
     end
 
     it "should :stand when hand is  17 or better" do
-      @dealer.hand_builder 5, 5, 5, 5
+      @dealer = Dealer.new hand_builder(5, 5, 5, 5)
       expect(@dealer.strategy).to eq :stand
     end
   end
@@ -149,106 +164,115 @@ describe "Player" do
 
   before do
     @player = Player.new
-    @dealer = Dealer.new
+  end
+
+  it "should create a valid Player" do
+    expect(@player).to be_a_kind_of Player
   end
 
   context "player strategy" do
     it "should :hit 11 or less (can't bust)" do
-      @player.hand_builder 5, 6
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(5, 6)
+      expect(@player.strategy hand_builder(10, 2)).to eq :hit
+      expect(@player.strategy hand_builder(10, 3)).to eq :hit
+      expect(@player.strategy hand_builder(10, 6)).to eq :hit
+      expect(@player.strategy hand_builder(10, 7)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
     end
 
     it "should :hit on 12 when dealer has 2 or 3" do
-      @player.hand_builder 5, 5, 2
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :hit
+      @player = Player.new hand_builder(5, 5, 2)
+      expect(@player.strategy hand_builder(10, 2)).to eq :hit
+      expect(@player.strategy hand_builder(10, 3)).to eq :hit
     end
 
     it "should :stand when dealer has a :bust card (3..6)" do
-      @player.hand_builder 5, 5, 2
-      expect(@player.strategy @dealer.hand_builder(10, 4)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :stand
-      @player.hand_builder 5, 5, 3
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :stand
+      @player = Player.new hand_builder(5, 5, 2)
+      expect(@player.strategy hand_builder(10, 4)).to eq :stand
+      expect(@player.strategy hand_builder(10, 6)).to eq :stand
+      @player = Player.new hand_builder(5, 5, 3)
+      expect(@player.strategy hand_builder(10, 3)).to eq :stand
     end
 
     it "should :hit on 16 or less when dealer has 7 or better" do
-      @player.hand_builder 5, 5, 2
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
-      @player.hand_builder 5, 5, 6
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(5, 5, 2)
+      expect(@player.strategy hand_builder(10, 7)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(5, 5, 6)
+      expect(@player.strategy hand_builder(10, 7)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
     end
 
     it "should :stand on 17 or better" do
-      @player.hand_builder 5, 5, 7
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :stand
-      @player.hand_builder 5, 5, 10
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :stand
+      @player = Player.new hand_builder(5, 5, 7)
+      expect(@player.strategy hand_builder(10, 2)).to eq :stand
+      expect(@player.strategy hand_builder(10, 3)).to eq :stand
+      expect(@player.strategy hand_builder(10, 6)).to eq :stand
+      expect(@player.strategy hand_builder(10, 7)).to eq :stand
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :stand
+      @player = Player.new hand_builder(5, 5, 10)
+      expect(@player.strategy hand_builder(10, 2)).to eq :stand
+      expect(@player.strategy hand_builder(10, 3)).to eq :stand
+      expect(@player.strategy hand_builder(10, 6)).to eq :stand
+      expect(@player.strategy hand_builder(10, 7)).to eq :stand
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :stand
     end
   end
 
   context "player strategy with an :Ace" do
     it "should :stand on 19 or better" do
-      @player.hand_builder 8, :Ace
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 9)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :stand
+      @player = Player.new hand_builder(8, :Ace)
+      expect(@player.strategy hand_builder(10, 2)).to eq :stand
+      expect(@player.strategy hand_builder(10, 6)).to eq :stand
+      expect(@player.strategy hand_builder(10, 7)).to eq :stand
+      expect(@player.strategy hand_builder(10, 9)).to eq :stand
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :stand
     end
 
     it "should :stand on 18 when dealer has 2, 7 or 8" do
-      @player.hand_builder 7, :Ace
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :stand
-      expect(@player.strategy @dealer.hand_builder(10, 8)).to eq :stand
+      @player = Player.new hand_builder(7, :Ace)
+      expect(@player.strategy hand_builder(10, 2)).to eq :stand
+      expect(@player.strategy hand_builder(10, 7)).to eq :stand
+      expect(@player.strategy hand_builder(10, 8)).to eq :stand
     end
 
     it "should :hit on 18 when dealer dealer does not have 2, 7 or 8" do
-      @player.hand_builder 7, :Ace
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 6)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 9)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(7, :Ace)
+      expect(@player.strategy hand_builder(10, 3)).to eq :hit
+      expect(@player.strategy hand_builder(10, 6)).to eq :hit
+      expect(@player.strategy hand_builder(10, 9)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
     end
 
     it "should :hit on 17 or less" do
-      @player.hand_builder 2, :Ace
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 4)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 8)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 10)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Jack)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
-      @player.hand_builder 6, :Ace
-      expect(@player.strategy @dealer.hand_builder(10, 2)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 3)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 4)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 7)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 8)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, 10)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Jack)).to eq :hit
-      expect(@player.strategy @dealer.hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(2, :Ace)
+      expect(@player.strategy hand_builder(10, 2)).to eq :hit
+      expect(@player.strategy hand_builder(10, 3)).to eq :hit
+      expect(@player.strategy hand_builder(10, 4)).to eq :hit
+      expect(@player.strategy hand_builder(10, 7)).to eq :hit
+      expect(@player.strategy hand_builder(10, 8)).to eq :hit
+      expect(@player.strategy hand_builder(10, 10)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Jack)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
+      @player = Player.new hand_builder(6, :Ace)
+      expect(@player.strategy hand_builder(10, 2)).to eq :hit
+      expect(@player.strategy hand_builder(10, 3)).to eq :hit
+      expect(@player.strategy hand_builder(10, 4)).to eq :hit
+      expect(@player.strategy hand_builder(10, 7)).to eq :hit
+      expect(@player.strategy hand_builder(10, 8)).to eq :hit
+      expect(@player.strategy hand_builder(10, 10)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Jack)).to eq :hit
+      expect(@player.strategy hand_builder(10, :Ace)).to eq :hit
     end
   end
-
 end
+
+def hand_builder *ranks
+  cards = Hand.new
+  ranks.each { |rank| cards.add_card Card.new(rank) }
+  cards
+end
+
 
 describe "Blackjack" do
 NUMBER_OF_RUNS = 10000
@@ -278,5 +302,4 @@ NUMBER_OF_RUNS = 10000
       puts "       Player doesn't loose #{"%0.2f" %percent}%"
     end
   end
-
 end
