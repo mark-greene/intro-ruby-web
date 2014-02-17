@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'sinatra'
+require "sinatra/reloader"
 
 set :sessions, true
 
@@ -23,6 +24,31 @@ helpers do
 
     total
   end
+
+  def card_image card
+    suit = case card[0]
+      when 'C' then 'clubs'
+      when 'D' then 'diamonds'
+      when 'H' then 'hearts'
+      when 'S' then 'spades'
+    end
+
+    value = card[1]
+    if ['J', 'Q', 'K', 'A'].include?(value)
+      value = case card[1]
+        when 'J' then 'jack'
+        when 'Q' then 'queen'
+        when 'K' then 'king'
+        when 'A' then 'ace'
+      end
+    end
+
+    "<img src='/images/cards/#{suit}_#{value}.jpg' class='card_image'"
+  end
+end
+
+before do
+  @show_hit_or_stay_button = true
 end
 
 get '/' do
@@ -38,6 +64,11 @@ get '/new_player' do
 end
 
 post '/new_player' do
+  if params[:player_name].empty?
+    @error = "Name is required"
+    halt erb(:new_player)
+  end
+
   session[:player_name] = params[:player_name]
   redirect '/game'
 end
@@ -53,6 +84,27 @@ get '/game' do
   session[:player_cards] << session[:deck].pop
   session[:dealer_cards] << session[:deck].pop
   session[:player_cards] << session[:deck].pop
+
+  erb :game
+end
+
+post '/game/player/hit' do
+  session[:player_cards] << session[:deck].pop
+
+  player_total = calculate_total(session[:player_cards])
+  if player_total == 21
+    @success = "#{session[:player_name]} hit Blackjack!"
+    @show_hit_or_stay_button = false
+  elsif calculate_total(session[:player_cards]) > 21
+    @error = "Sorry, session[:player_name] busted!"
+    @show_hit_or_stay_button = false
+  end
+
+  erb :game
+end
+
+post '/game/player/stay' do
+  @success = "session[:player_name] has chosen to stay."
 
   erb :game
 end

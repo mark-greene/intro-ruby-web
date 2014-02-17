@@ -2,21 +2,32 @@
 
 <p>Welcome <%= session[:player_name] %>.</p>
 
-Dealer's cards
-<ul>
-  <% session[:dealer_cards].each do |card| %>
-    <li> <%= card.to_s %> </li>
-  <% end %>
-</ul>
+<div class="well">
+  <h4>Dealer's cards:</h4>
+    <% session[:dealer_cards].each do |card| %>
+      <%= card_image(card) %>
+    <% end %>
+</div>
 
-Player's cards
-<ul>
-  <% session[:player_cards].each do |card| %>
-    <li> <%= card.to_s %> </li>
-  <% end %>
-</ul>
+<br/>
+<div class="well">
+  <h4>Player's cards:</h4>
+    <% session[:player_cards].each do |card| %>
+      <%= card_image(card) %>
+    <% end %>
+</div>
 
 <p>
-  What would you like to do?
+  What would <%= session[:player_name] %> like to do?
   <%= session[:player_name] %> has <%= calculate_total(session[:player_cards]) %>
+
+<% if @show_hit_or_stay_button %>
+  <form id="hit_form" action="/game/player/hit" method='post' >
+    <input type="submit" class="btn btn-success" value="Hit" />
+  </form>
+  <form id="stay_form" action="/game/player/stay" method='post' >
+    <input type="submit" class="btn btn-warning" value="Stay" />
+  </form>
+<% end %>
+
 </p>
