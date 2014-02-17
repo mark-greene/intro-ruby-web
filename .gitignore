@@ -21,3 +21,6 @@ doc/
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+#Scratch workspace
+lessons/
