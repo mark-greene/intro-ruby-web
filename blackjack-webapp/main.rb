@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'sinatra'
-# require "sinatra/reloader"
+require "sinatra/reloader"
 
 set :sessions, true
 
@@ -10,14 +10,14 @@ helpers do
 
     total = 0
     arr.each do |rank|
-      if rank == 'A'
+      if rank == 'Ace'
         total += 11
       else
         total += rank.to_i == 0 ? 10 : rank.to_i
       end
     end
 
-    arr.select { |element| element == 'A' }.count.times do
+    arr.select { |element| element == 'Ace' }.count.times do
       break if total <= 21
       total -= 10
     end
@@ -26,24 +26,7 @@ helpers do
   end
 
   def card_image card
-    suit = case card[0]
-      when 'C' then 'clubs'
-      when 'D' then 'diamonds'
-      when 'H' then 'hearts'
-      when 'S' then 'spades'
-    end
-
-    value = card[1]
-    if ['J', 'Q', 'K', 'A'].include?(value)
-      value = case card[1]
-        when 'J' then 'jack'
-        when 'Q' then 'queen'
-        when 'K' then 'king'
-        when 'A' then 'ace'
-      end
-    end
-
-    "<img src='/images/cards/#{suit}_#{value}.jpg' class='card_image'>"
+    "<img src='/images/cards/#{card[0].downcase}_#{card[1].downcase}.jpg' class='card_image'>"
   end
 
   def winner! msg
@@ -94,8 +77,8 @@ end
 get '/game' do
   session[:turn] = session[:player_name]
 
-  suits = ['C', 'D', 'H', 'S']
-  ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+  suits = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
+  ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
   session[:deck] = suits.product(ranks).shuffle!
 
   session[:dealer_cards] = []
@@ -169,5 +152,6 @@ get '/game/compare' do
 end
 
 get '/game_over' do
+  session.clear
   erb :game_over
 end
