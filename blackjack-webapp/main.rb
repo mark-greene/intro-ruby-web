@@ -1,8 +1,10 @@
 require 'rubygems'
 require 'sinatra'
-require "sinatra/reloader"
+# require "sinatra/reloader"
 
 set :sessions, true
+
+BLACKJACK = 21
 
 helpers do
   def calculate_total cards
@@ -18,7 +20,7 @@ helpers do
     end
 
     arr.select { |element| element == 'Ace' }.count.times do
-      break if total <= 21
+      break if total <= BLACKJACK
       total -= 10
     end
 
@@ -95,10 +97,10 @@ post '/game/player/hit' do
   session[:player_cards] << session[:deck].pop
 
   player_total = calculate_total(session[:player_cards])
-  if player_total == 21
-    winner!("#{session[:player_name]} hit Blackjack!")
-  elsif calculate_total(session[:player_cards]) > 21
-    loser!("#{session[:player_name]} busted!")
+  if player_total == BLACKJACK
+    winner!("You hit Blackjack!")
+  elsif calculate_total(session[:player_cards]) > BLACKJACK
+    loser!("You busted!")
   end
 
   erb :game
@@ -115,9 +117,9 @@ get '/game/dealer' do
 
   dealer_total = calculate_total(session[:dealer_cards])
 
-  if dealer_total == 21
+  if dealer_total == BLACKJACK
     loser!("Dealer hit blackjack.")
-  elsif dealer_total > 21
+  elsif dealer_total > BLACKJACK
     winner!("Dealer busted!")
   elsif dealer_total >=17
     redirect '/game/compare'
@@ -141,11 +143,11 @@ get '/game/compare' do
   dealer_total = calculate_total(session[:dealer_cards])
 
   if player_total > dealer_total
-    winner!("#{session[:player_name]} stayed at #{player_total} and the dealer stayed at #{dealer_total}.")
+    winner!("You stayed at #{player_total} and the dealer stayed at #{dealer_total}.")
   elsif player_total < dealer_total
-    loser!("#{session[:player_name]} stayed at #{player_total} and the dealer stayed at #{dealer_total}.")
+    loser!("You stayed at #{player_total} and the dealer stayed at #{dealer_total}.")
   else
-    tie!("Both #{session[:player_name]} and the dealer stayed at #{player_total}.")
+    tie!("You and the dealer stayed at #{player_total}.")
   end
 
   erb :game
