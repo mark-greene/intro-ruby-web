@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'sinatra'
-# require "sinatra/reloader"
+require "sinatra/reloader"
 
 set :sessions, true
 
@@ -34,19 +34,21 @@ helpers do
   def winner! msg
     @play_again = true
     @show_hit_or_stay_button = false
-    @success = "<strong>#{session[:player_name]} won!</strong> #{msg}"
+    session[:player_pot] = session[:player_pot] + session[:player_bet]
+    @winner = "<strong>#{session[:player_name]} won!</strong> #{msg}"
   end
 
   def loser! msg
     @play_again = true
     @show_hit_or_stay_button = false
-    @error = "<strong>#{session[:player_name]} loses</strong> #{msg}"
+    session[:player_pot] = session[:player_pot] - session[:player_bet]
+    @loser = "<strong>#{session[:player_name]} loses</strong> #{msg}"
   end
 
   def tie! msg
     @play_again = true
     @show_hit_or_stay_button = false
-    @success = "<strong>It's a tie!</strong> #{msg}"
+    @winner = "<strong>It's a tie!</strong> #{msg}"
   end
 end
 
@@ -63,6 +65,7 @@ get '/' do
 end
 
 get '/new_player' do
+  session[:player_pot] = 500
   erb :new_player
 end
 
@@ -73,7 +76,25 @@ post '/new_player' do
   end
 
   session[:player_name] = params[:player_name]
-  redirect '/game'
+  redirect '/bet'
+end
+
+get '/bet' do
+  session[:player_bet] = nil
+  erb :bet
+end
+
+post '/bet' do
+  if params[:bet_amount].nil? || params[:bet_amount].to_i == 0
+    @error = "Must place a bet"
+    halt erb(:bet)
+  elsif params[:bet_amount].to_i > session[:player_pot]
+    @error = "Bet must be less that $#{session[:player_pot]}."
+    halt erb(:bet)
+  else
+    session[:player_bet] = params[:bet_amount].to_i
+    redirect '/game'
+  end
 end
 
 get '/game' do
@@ -103,7 +124,7 @@ post '/game/player/hit' do
     loser!("You busted!")
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/player/stay' do
@@ -128,7 +149,7 @@ get '/game/dealer' do
 
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/dealer/hit' do
@@ -150,7 +171,7 @@ get '/game/compare' do
     tie!("You and the dealer stayed at #{player_total}.")
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 get '/game_over' do
