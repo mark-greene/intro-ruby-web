@@ -5,13 +5,14 @@ require "sinatra/reloader"
 set :sessions, true
 
 BLACKJACK = 21
+INITIAL_POT = 500
 
 helpers do
   def calculate_total cards
-    arr = cards.map {|element| element[1]}
+    card_ranks = cards.map {|card| card[1]}
 
     total = 0
-    arr.each do |rank|
+    card_ranks.each do |rank|
       if rank == 'Ace'
         total += 11
       else
@@ -19,7 +20,7 @@ helpers do
       end
     end
 
-    arr.select { |element| element == 'Ace' }.count.times do
+    card_ranks.select { |rank| rank == 'Ace' }.count.times do
       break if total <= BLACKJACK
       total -= 10
     end
@@ -28,7 +29,9 @@ helpers do
   end
 
   def card_image card
-    "<img src='/images/cards/#{card[0].downcase}_#{card[1].downcase}.jpg' class='card_image'>"
+    suit = card[0].downcase
+    rank = card[1].downcase
+    "<img src='/images/cards/#{suit}_#{rank}.jpg' class='card_image'>"
   end
 
   def winner! msg
@@ -65,7 +68,7 @@ get '/' do
 end
 
 get '/new_player' do
-  session[:player_pot] = 500
+  session[:player_pot] = INITIAL_POT
   erb :new_player
 end
 
@@ -81,6 +84,11 @@ end
 
 get '/bet' do
   session[:player_bet] = nil
+  if session[:player_pot] <= 0
+    @error = "<strong>#{session[:player_name]}, You are busted!</strong>"
+    halt erb(:game_over)
+  end
+
   erb :bet
 end
 
@@ -175,6 +183,6 @@ get '/game/compare' do
 end
 
 get '/game_over' do
-  session.clear
+
   erb :game_over
 end

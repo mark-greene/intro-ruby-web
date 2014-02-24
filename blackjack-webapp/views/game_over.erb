@@ -1,3 +1,9 @@
-<h3>Thanks for playing</h3>
-Maybe it's time to
-<a href='/new_player'>Start over.</a>
+<h3>Thanks for playing <%= session[:player_name] %></h3>
+
+<% if session[:player_pot] > 0 %>
+  <h5>Looks like you're leaving with $<%= session[:player_pot] %>
+<% else %>
+  <h5>Maybe it's time to mortage your house and
+    <a href='/new_player'>Start over.</a>
+  </h5>
+<% end %>
